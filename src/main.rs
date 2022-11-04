@@ -10,5 +10,6 @@ fn main() {
     let contents = fs::read_to_string("examples/skript.txt")
         .expect("Should have been able to read the file");
 
-    tokenize(contents);
+    let result = tokenize(contents);
+    println!("{:?}", result);
 }
