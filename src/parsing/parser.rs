@@ -34,43 +34,21 @@ pub mod tokenizer {
         let symboles_regex: Regex = Regex::new("^(\\(|\\)|\\{|\\}|\\[|\\]|;|\")").unwrap();
         let empty_regex: Regex = Regex::new("^(\\s)").unwrap();
 
-        let general_literals_regex: Regex = Regex::new("^(-?[0-9]+|-?[0-9]*.[0-9]+|\"[a-zA-Z]+\"|[a-zA-Z]+)").unwrap();
-        let integer_regex: Regex = Regex::new("^-?[0-9]+").unwrap();
-        let float_regex: Regex = Regex::new("^-?[0-9]*.[0-9]+").unwrap();
+        let general_literals_regex: Regex = Regex::new("^([0-9]+|[0-9]*.[0-9]+|\"[a-zA-Z]+\"|[a-zA-Z]+)").unwrap();
+        let integer_regex: Regex = Regex::new("^[0-9]+").unwrap();
+        let float_regex: Regex = Regex::new("^[0-9]*.[0-9]+").unwrap();
         let string_regex: Regex = Regex::new("^\"[a-zA-Z_!?.,ßäöü]+\"").unwrap();
         let text_regex: Regex = Regex::new("^[a-zA-Z_]+").unwrap();
 
         let mut find_data: Option<Match> = None;
         while workon_script.len() > 0 {
-            if keyword_regex.is_match(&*workon_script) {
+            if empty_regex.is_match(&*workon_script) {
+                let tmp = empty_regex.find(&*workon_script).unwrap();
+                find_data = Some(tmp);
+            } else if keyword_regex.is_match(&*workon_script) {
                 let tmp = keyword_regex.find(&*workon_script).unwrap();
                 find_data = Some(tmp);
                 tokens.push(Keyword(String::from(tmp.as_str())));
-            } else if general_literals_regex.is_match(&*workon_script) {
-                let tmp;
-                let literal: Token;
-                if float_regex.is_match(&*workon_script) {
-                    tmp = float_regex.find(&*workon_script).unwrap();
-                    find_data = Some(tmp);
-                    println!("{}", tmp.as_str());
-                    literal = Literal(Float_literal(tmp.as_str().parse::<f32>().unwrap()));
-                } else if integer_regex.is_match(&*workon_script) {
-                    tmp = integer_regex.find(&*workon_script).unwrap();
-                    find_data = Some(tmp);
-                    literal = Literal(Integer_literal(tmp.as_str().parse::<u32>().unwrap()));
-                } else if string_regex.is_match(&*workon_script) {
-                    tmp = string_regex.find(&*workon_script).unwrap();
-                    find_data = Some(tmp);
-                    literal = Literal(String_literal(String::from(tmp.as_str())));
-                } else if text_regex.is_match(&*workon_script) {
-                    tmp = text_regex.find(&*workon_script).unwrap();
-                    find_data = Some(tmp);
-                    literal = Literal(Text_literal(String::from(tmp.as_str())));
-                } else {
-                    println!("FATAL ERROR");
-                    break;
-                }
-                tokens.push(literal);
             } else if operators_regex.is_match(&*workon_script) {
                 let tmp = operators_regex.find(&*workon_script).unwrap();
                 find_data = Some(tmp);
@@ -87,9 +65,27 @@ pub mod tokenizer {
                 let tmp = symboles_regex.find(&*workon_script).unwrap();
                 find_data = Some(tmp);
                 tokens.push(Symbol(String::from(tmp.as_str())));
-            } else if empty_regex.is_match(&*workon_script) {
-                let tmp = empty_regex.find(&*workon_script).unwrap();
+            } else if float_regex.is_match(&*workon_script) {
+                let tmp = float_regex.find(&*workon_script).unwrap();
                 find_data = Some(tmp);
+                println!("'{}'", tmp.as_str());
+                let literal = Literal(Float_literal(tmp.as_str().parse::<f32>().unwrap()));
+                tokens.push(literal);
+            } else if integer_regex.is_match(&*workon_script) {
+                let tmp = integer_regex.find(&*workon_script).unwrap();
+                find_data = Some(tmp);
+                let literal = Literal(Integer_literal(tmp.as_str().parse::<u32>().unwrap()));
+                tokens.push(literal);
+            } else if string_regex.is_match(&*workon_script) {
+                let tmp = string_regex.find(&*workon_script).unwrap();
+                find_data = Some(tmp);
+                let literal = Literal(String_literal(String::from(tmp.as_str())));
+                tokens.push(literal);
+            } else if text_regex.is_match(&*workon_script) {
+                let tmp = text_regex.find(&*workon_script).unwrap();
+                find_data = Some(tmp);
+                let literal = Literal(Text_literal(String::from(tmp.as_str())));
+                tokens.push(literal);
             } else {
                 println!("ERROR: INVALID TOKEN!");
                 println!("'{}'", workon_script);
