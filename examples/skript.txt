@@ -1,0 +1,9 @@
+ganzzahl speicherplatz huff_iq = -4;
+
+ausgeben huff_iq;
+
+huff_iq = (huff_iq - 1) * 10;
+
+if huff_iq > 0 {
+    ausgeben "unmoeglich!";
+}
