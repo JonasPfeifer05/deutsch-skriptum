@@ -1,92 +1,116 @@
-pub mod tokenizer {
-    use regex::{Match, Regex, RegexSet};
-    use crate::parsing::parser::tokenizer::Literals::{FloatLiteral, IntegerLiteral, StringLiteral, TextLiteral};
-    use crate::parsing::parser::tokenizer::Token::{Comparator, Keyword, Literal, Operator, Symbol, Type};
+use std::any::Any;
+use std::ops::Add;
+use std::vec::IntoIter;
+use crate::parsing::parser::Component::Declaration;
+use crate::parsing::tokenizer::{Literals, Token};
+use crate::parsing::tokenizer::Literals::TextLiteral;
+use crate::parsing::tokenizer::Token::{Comparator, Keyword, Literal, Operator, Symbol, Type};
 
-    #[derive(Debug)]
-    pub enum Token {
-        Keyword(String),
-        Operator(String),
-        Comparator(String),
-        Type(String),
-        Symbol(String),
-        Empty(String),
-        Literal(Literals),
+#[derive(Debug)]
+pub enum Component {
+    Declaration(),
+    Assignment(),
+    If(),
+    While(),
+    Print(),
+}
+
+#[derive(Debug)]
+pub struct ParseTree {
+    commands: Vec<Component>
+}
+
+impl ParseTree {
+    pub fn new() -> Self {
+        return ParseTree{commands: Vec::new()};
     }
+}
 
-    #[derive(Debug)]
-    pub enum Literals {
-        IntegerLiteral(u32),
-        FloatLiteral(f32),
-        StringLiteral(String),
-        TextLiteral(String),
+fn get_next<'a>(tokens: &'a Vec<Token>, index: &mut usize) -> &'a Token {
+    let token: &Token = tokens.get(*index).unwrap();
+    (*index) += 1;
+
+    return token;
+}
+
+fn expect_next<'a>(tokens: &'a Vec<Token>, index: &mut usize, expected: Token) -> Result<&'a Token, String> {
+    let token = get_next(tokens, index);
+    if token.type_id().eq(&expected.type_id()) {
+        return Ok(token);
     }
+    return Err(String::from("Tokens did not match!"));
+}
 
-    pub fn tokenize(script: String) -> Result<Vec<Token>, String> {
-        let mut work_script = script.clone();
+fn expect_next_value<'a>(tokens: &'a Vec<Token>, index: &mut usize, expected: Token) -> Result<&'a Token, String> {
+    let token = get_next(tokens, index);
+    if *token == expected {
+        return Ok(token);
+    }
+    return Err(String::from("Tokens did not match!"));
+}
 
-        let mut tokens: Vec<Token> = Vec::new();
+fn create_expression(tokens: &'a Vec<Token>, index: &mut usize) {
 
-        let keyword_regex: Regex = Regex::new("^(setze|speicherplatz|ausgeben|wenn|sonst|solange)").unwrap();
-        let operators_regex: Regex = Regex::new("^(=|\\+|-|\\*|/|%|nicht)").unwrap();
-        let comparators_regex: Regex = Regex::new("^(==|>=|<=|!=|<|>|und|oder)").unwrap();
-        let types_regex: Regex = Regex::new("^(ganzzahl|gleitkommazahl|text)").unwrap();
-        let symboles_regex: Regex = Regex::new("^(\\(|\\)|\\{|\\}|\\[|\\]|;)").unwrap();
-        let empty_regex: Regex = Regex::new("^(\\s)").unwrap();
+}
 
-        let integer_regex: Regex = Regex::new("^[0-9]+").unwrap();
-        let float_regex: Regex = Regex::new("^[0-9]*\\.[0-9]+").unwrap();
-        let string_regex: Regex = Regex::new("^\".*\"").unwrap();
-        let text_regex: Regex = Regex::new("^[a-zA-Z]+").unwrap();
+fn create_declaration(tokens: &Vec<Token>, index: &mut usize, typee: &String) -> Result<Component, String> {
+    let keyword = expect_next_value(tokens, index, Keyword(String::from("speicherplatz"))).expect("Expected Speicherplatz token");
+    let variable_name = expect_next(tokens, index, Literal(TextLiteral(String::new()))).expect("Expected variable name!");
+    expect_next_value(tokens, index, Operator(String::from("="))).expect("Expected assigment operator!");
 
-        let mut find_data: Match;
-        while work_script.len() > 0 {
-            if empty_regex.is_match(&*work_script) {
-                find_data = empty_regex.find(&*work_script).unwrap();
+    println!("{:?}", variable_name);
 
-            } else if keyword_regex.is_match(&*work_script) {
-                find_data = keyword_regex.find(&*work_script).unwrap();
-                tokens.push(Keyword(String::from(find_data.as_str())));
+    return Ok(Declaration())
+}
 
-            } else if comparators_regex.is_match(&*work_script) {
-                find_data = comparators_regex.find(&*work_script).unwrap();
-                tokens.push(Comparator(String::from(find_data.as_str())));
+fn create_assignment(tokens: &Vec<Token>, index: &mut usize) {
 
-            } else if types_regex.is_match(&*work_script) {
-                find_data = types_regex.find(&*work_script).unwrap();
-                tokens.push(Type(String::from(find_data.as_str())));
+}
 
-            } else if symboles_regex.is_match(&*work_script) {
-                find_data = symboles_regex.find(&*work_script).unwrap();
-                tokens.push(Symbol(String::from(find_data.as_str())));
+fn create_if(tokens: &Vec<Token>, index: &mut usize) {
 
-            } else if float_regex.is_match(&*work_script) {
-                find_data = float_regex.find(&*work_script).unwrap();
-                tokens.push(Literal(FloatLiteral(find_data.as_str().parse::<f32>().unwrap())));
+}
 
-            } else if integer_regex.is_match(&*work_script) {
-                find_data = integer_regex.find(&*work_script).unwrap();
-                tokens.push(Literal(IntegerLiteral(find_data.as_str().parse::<u32>().unwrap())));
+fn create_while(tokens: &Vec<Token>, index: &mut usize) {
 
-            } else if string_regex.is_match(&*work_script) {
-                find_data = string_regex.find(&*work_script).unwrap();
-                tokens.push(Literal(StringLiteral(String::from(find_data.as_str()))));
+}
 
-            } else if text_regex.is_match(&*work_script) {
-                find_data = text_regex.find(&*work_script).unwrap();
-                tokens.push(Literal(TextLiteral(String::from(find_data.as_str()))));
+fn create_print(tokens: &Vec<Token>, index: &mut usize) {
 
-            } else if operators_regex.is_match(&*work_script) {
-                find_data = operators_regex.find(&*work_script).unwrap();
-                tokens.push(Operator(String::from(find_data.as_str())));
+}
 
-            } else {
-                return Err(String::from("INVALID TOKEN!"));
 
+pub fn parse(tokens: Vec<Token>) -> Result<ParseTree, String> {
+    for mut i in 0..tokens.len() {
+        match get_next(&tokens, &mut i) {
+            Keyword(value) => {
+                match value.as_str() {
+                    "setze" => {create_assignment(&tokens, &mut i)}
+                    "ausgeben" => {create_print(&tokens, &mut i)}
+                    "wenn" => {create_if(&tokens, &mut i)}
+                    "solange" => {create_while(&tokens, &mut i)}
+                    _ => {
+                        return Err(String::from("Invalid starting token!"));
+                    }
+                }
             }
-            work_script.replace_range(find_data.start()..find_data.end(), "");
-        }
+            Type(value) => {
+                println!("{:?}", create_declaration(&tokens, &mut i, value));
+            }
+            Literal(literal_type) => {
+                match literal_type {
+                    Literals::TextLiteral(value) => {
 
-        return Ok(tokens);
+                    }
+                    _ => {
+                        return Err(String::from("Invalid starting token!"));
+                    }
+                }
+            }
+            _ => {
+                return Err(String::from("Invalid starting token!"));
+            }
+        }
     }
+    return Ok(ParseTree::new());
 }

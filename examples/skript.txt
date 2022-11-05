@@ -1,9 +1,1 @@
-ganzzahl speicherplatz huffIq = -4;
-
-setze huffIq = huffIq * 10;
-
-wenn huffIq > 10 {
-    ausgeben "Unmöglich!";
-} sonst {
-    ausgeben "Dachte ich mie!";
-}
+ganzzahl speicherplatz huffIq = (100 - 1) * 4 ^ 2;
